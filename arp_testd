@@ -1,0 +1,89 @@
+#!/bin/bash
+
+INTERFACE = "br0"
+
+WATCH_DIR="/var/tmp"
+
+PID_FILE="${WATCH_DIR}/arp_test.pid"
+
+
+usage()
+{
+        echo "$0 (start|stop|status)"
+}
+
+stop()
+{
+        if [ -e ${PID_FILE} ]
+        then
+                _pid=$(cat ${PID_FILE})
+                kill $_pid
+                rt=$?
+                if [ "$rt" == "0" ]
+                then
+                        echo "Daemon stop"
+                else
+                        echo "Error stop daemon"
+                fi
+        else
+                echo "Daemon is't running"
+        fi
+}
+
+
+status()
+{
+    if [ -e $PID_FILE ]
+    then
+	_pid=$(cat ${PID_FILE})
+	if [ -e /proc/${_pid} ]
+	then
+	    echo "Daemon already running with pid = $_pid"    
+done
+	else
+	    echo "Daemon is not running."
+	fi
+    fi
+
+}
+
+start()
+{
+    if [ -e $PID_FILE ]
+    then
+	_pid=$(cat ${PID_FILE})
+	if [ -e /proc/${_pid} ]
+	then
+	    echo "Daemon already running with pid = $_pid"
+	    exit 0
+	fi
+    fi
+
+    (
+	trap  "{ rm -f ${PID_FILE}; exit 255; }" TERM INT EXIT 
+	while :; do
+	    arp -v | grep " $INTERFACE$" | cut -d' ' -f 1
+	    sleep 60
+	done
+    )&
+
+    sleep 1
+    echo $! > ${PID_FILE}
+}
+
+
+case $1 in
+        "start")
+                start
+                ;;
+        "stop")
+                stop
+                ;;
+	"status")
+		status
+		;;
+        *)
+                usage
+                ;;
+esac
+exit
