@@ -22,6 +22,7 @@ stop()
                 if [ "$rt" == "0" ]
                 then
                         echo "Daemon stop"
+                        trap  "{ rm -f ${PID_FILE}; exit 255; }" TERM INT EXIT
                 else
                         echo "Error stop daemon"
                 fi
